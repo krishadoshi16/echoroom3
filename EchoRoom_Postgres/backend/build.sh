@@ -2,7 +2,8 @@
 # exit on error
 set -o errexit
 
-cd backend
+# Navigate to the backend directory relative to the repo root
+cd EchoRoom_Postgres/backend
 
 pip install -r requirements.txt
 
