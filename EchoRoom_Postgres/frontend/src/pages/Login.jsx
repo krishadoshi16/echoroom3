@@ -56,13 +56,16 @@ export default function Login() {
     fetch(`${API_BASE}/api/social/google/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ access_token: credentialResponse.credential })
+      body: JSON.stringify({ 
+        access_token: credentialResponse.credential,
+        id_token: credentialResponse.credential 
+      })
     })
     .then(async (res) => {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.detail || "Google Login failed");
-      if (json?.access_token) localStorage.setItem("access", json.access_token);
-      if (json?.refresh_token) localStorage.setItem("refresh", json.refresh_token);
+      if (json?.access) localStorage.setItem("access", json.access);
+      if (json?.refresh) localStorage.setItem("refresh", json.refresh);
       
       // Check admin status
       const adminRes = await fetch(`${API_BASE}/api/admin/stats/`, {

@@ -23,7 +23,7 @@ from dj_rest_auth.registration.views import SocialLoginView
 
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
-    callback_url = "http://localhost:5173"
+    callback_url = "https://echoroom-frontend-v3.onrender.com"
     client_class = OAuth2Client
 
 urlpatterns = [
