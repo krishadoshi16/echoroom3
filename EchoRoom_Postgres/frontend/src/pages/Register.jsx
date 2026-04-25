@@ -85,7 +85,10 @@ export default function Register() {
     })
     .then(async (res) => {
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.detail || "Google Login failed");
+      if (!res.ok) {
+        const errorMsg = json?.detail || (json?.non_field_errors && json.non_field_errors[0]) || "Google Login failed";
+        throw new Error(errorMsg);
+      }
       if (json?.access) localStorage.setItem("access", json.access);
       if (json?.refresh) localStorage.setItem("refresh", json.refresh);
       

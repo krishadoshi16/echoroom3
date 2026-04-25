@@ -24,11 +24,15 @@ def setup():
         print("Error: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in environment.")
         return
 
-    app, created = SocialApp.objects.get_or_create(provider='google')
-    app.name = 'Google'
-    app.client_id = client_id
-    app.secret = secret
-    app.save()
+    # Delete existing to prevent MultipleObjectsReturned
+    SocialApp.objects.filter(provider='google').delete()
+
+    app = SocialApp.objects.create(
+        provider='google',
+        name='Google',
+        client_id=client_id,
+        secret=secret
+    )
     app.sites.add(site)
     print(f"Social App 'Google' configured.")
 
