@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -47,6 +48,35 @@ export default function Login() {
         setLoading(false);
         setError(String(e?.message || e));
       });
+  };
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    setLoading(true);
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+    fetch(`${API_BASE}/api/social/google/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ access_token: credentialResponse.credential })
+    })
+    .then(async (res) => {
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.detail || "Google Login failed");
+      if (json?.access_token) localStorage.setItem("access", json.access_token);
+      if (json?.refresh_token) localStorage.setItem("refresh", json.refresh_token);
+      
+      // Check admin status
+      const adminRes = await fetch(`${API_BASE}/api/admin/stats/`, {
+        headers: { Authorization: `Bearer ${json.access_token}` },
+      });
+      if (adminRes.ok) localStorage.setItem("is_admin", "true");
+      
+      setLoading(false);
+      navigate("/");
+    })
+    .catch(e => {
+      setLoading(false);
+      setError(String(e?.message || e));
+    });
   };
 
   return (
@@ -173,6 +203,16 @@ export default function Login() {
           <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
           <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, fontFamily: "'Space Mono',monospace" }}>OR</span>
           <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google Login Failed")}
+            theme="filled_black"
+            text="continue_with"
+            shape="pill"
+          />
         </div>
 
         <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 14 }}>
