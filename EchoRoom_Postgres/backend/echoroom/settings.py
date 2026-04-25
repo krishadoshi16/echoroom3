@@ -144,6 +144,11 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 # Social Auth Settings
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
+            "secret": os.environ.get("GOOGLE_CLIENT_SECRET", ""),
+            "key": ""
+        },
         "SCOPE": [
             "profile",
             "email",
@@ -168,3 +173,24 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOW_ALL_ORIGINS = True # Allow all origins in production for deployment ease.
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}

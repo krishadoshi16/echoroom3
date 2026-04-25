@@ -21,10 +21,21 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 
+from django.http import JsonResponse
+import traceback
+
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     callback_url = "https://echoroom-frontend-v3.onrender.com"
     client_class = OAuth2Client
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Exception as e:
+            tb = traceback.format_exc()
+            print("GOOGLE LOGIN ERROR:", tb)
+            return JsonResponse({"detail": str(e), "traceback": tb}, status=400)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
