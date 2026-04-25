@@ -11,5 +11,4 @@ python manage.py migrate
 # Seed data if it's the first time
 python manage.py loaddata db_seed_utf8.json || echo "Data already seeded or error"
 
-# Configure Google Auth - delete duplicates and recreate fresh
-python manage.py setup_google
+echo "Build complete."
