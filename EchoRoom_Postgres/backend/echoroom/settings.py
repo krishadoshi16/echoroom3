@@ -146,13 +146,10 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 
 # Social Auth Settings
+# NOTE: Do NOT add APP block here - credentials are managed in the DB by setup_google_auth.py
+# Having both DB entry AND settings APP causes MultipleObjectsReturned
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
-        "APP": {
-            "client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
-            "secret": os.environ.get("GOOGLE_CLIENT_SECRET", ""),
-            "key": ""
-        },
         "SCOPE": [
             "profile",
             "email",
@@ -160,7 +157,6 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {
             "access_type": "online",
         },
-        "OAUTH_PKCE_ENABLED": True,
     }
 }
 
