@@ -105,3 +105,111 @@ class MeActivityView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
+class GoogleLoginView(APIView):
+    """
+    Custom Google login that verifies tokens directly with Google's tokeninfo API.
+    This completely bypasses allauth and its SocialApp database lookups,
+    eliminating the MultipleObjectsReturned error permanently.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        import os
+        import requests as http_requests
+        from django.contrib.auth import get_user_model
+
+        # Frontend sends the Google JWT credential as both access_token and id_token
+        id_token = (
+            request.data.get("id_token")
+            or request.data.get("credential")
+            or request.data.get("access_token")
+        )
+
+        if not id_token:
+            return Response(
+                {"detail": "id_token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verify with Google
+        try:
+            google_response = http_requests.get(
+                "https://oauth2.googleapis.com/tokeninfo",
+                params={"id_token": id_token},
+                timeout=10,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Failed to contact Google: {e}"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if google_response.status_code != 200:
+            return Response(
+                {"detail": "Invalid Google token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        google_data = google_response.json()
+
+        # Verify token audience matches our app's client ID
+        expected_client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+        token_aud = google_data.get("aud", "")
+        if expected_client_id and token_aud != expected_client_id:
+            return Response(
+                {"detail": "Token audience mismatch"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = google_data.get("email")
+        if not email:
+            return Response(
+                {"detail": "Email not found in Google token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not google_data.get("email_verified"):
+            return Response(
+                {"detail": "Google email not verified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        User = get_user_model()
+
+        # Build a safe username from email prefix
+        base_username = email.split("@")[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exclude(email=email).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        # Get or create user
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": username,
+                "first_name": google_data.get("given_name", ""),
+                "last_name": google_data.get("family_name", ""),
+            },
+        )
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        # Issue JWT tokens
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
