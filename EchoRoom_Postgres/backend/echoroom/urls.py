@@ -31,6 +31,36 @@ class GoogleLogin(SocialLoginView):
 
     def dispatch(self, request, *args, **kwargs):
         try:
+            from allauth.socialaccount.models import SocialApp
+            from django.contrib.sites.models import Site
+            import os
+            
+            apps = SocialApp.objects.filter(provider='google')
+            if apps.exists():
+                first = apps.first()
+                if apps.count() > 1:
+                    apps.exclude(id=first.id).delete()
+                
+                # Ensure credentials are correct
+                client_id = os.environ.get("GOOGLE_CLIENT_ID")
+                secret = os.environ.get("GOOGLE_CLIENT_SECRET")
+                if client_id and secret:
+                    first.client_id = client_id
+                    first.secret = secret
+                    first.save()
+                    site, _ = Site.objects.get_or_create(id=1)
+                    first.sites.add(site)
+            else:
+                client_id = os.environ.get("GOOGLE_CLIENT_ID")
+                secret = os.environ.get("GOOGLE_CLIENT_SECRET")
+                if client_id and secret:
+                    app = SocialApp.objects.create(
+                        provider='google', name='Google', 
+                        client_id=client_id, secret=secret
+                    )
+                    site, _ = Site.objects.get_or_create(id=1)
+                    app.sites.add(site)
+
             return super().dispatch(request, *args, **kwargs)
         except Exception as e:
             tb = traceback.format_exc()
