@@ -141,28 +141,9 @@ ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-# Allow social logins to auto-connect to existing accounts with the same email
-SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
-SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
-
-# Custom adapter: reads Google credentials from env vars, never from DB
-# This permanently fixes MultipleObjectsReturned errors
-SOCIALACCOUNT_ADAPTER = "accounts.adapter.CustomSocialAccountAdapter"
-
-# Social Auth Settings
-# NOTE: Do NOT add APP block here - credentials are managed in the DB by setup_google_auth.py
-# Having both DB entry AND settings APP causes MultipleObjectsReturned
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-    }
-}
+# Google login is handled by a custom view (accounts.views.GoogleLoginView)
+# that calls Google's tokeninfo API directly - no allauth DB lookups needed.
+# GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set as Render env vars.
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
