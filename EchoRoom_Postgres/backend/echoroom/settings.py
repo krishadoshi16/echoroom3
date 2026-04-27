@@ -35,18 +35,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sites",
     # Third-party
     "corsheaders",
     "rest_framework",
-    "rest_framework.authtoken",
     "rest_framework_simplejwt",
-    "dj_rest_auth",
-    "dj_rest_auth.registration",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
     # Local apps
     "accounts",
     "debates",
@@ -63,7 +55,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "echoroom.urls"
@@ -129,21 +120,11 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-SITE_ID = 1
-
-# Allauth Settings
-ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"
-
-# Google login is handled by a custom view (accounts.views.GoogleLoginView)
-# that calls Google's tokeninfo API directly - no allauth DB lookups needed.
-# GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set as Render env vars.
+# Google login is handled by accounts.views.GoogleLoginView
+# which calls Google's tokeninfo API directly.
+# Set GOOGLE_CLIENT_ID as a Render environment variable.
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
